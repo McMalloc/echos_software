@@ -2,6 +2,7 @@ local socket = require "socket"
 local socket_unix = require "socket.unix"
 
 local samples
+local cue
 local state = 0
 
 c = assert(socket_unix())
@@ -23,18 +24,8 @@ function love.load()
 		z2 = love.audio.newSource("placeholder/z2.wav"),
 	}
 
-	samples.a0:setLooping(true)
-	samples.a1:setLooping(true)
-	samples.a2:setLooping(true)
-	samples.a3:setLooping(true)
-	samples.b:setLooping(true)
-	samples.c1:setLooping(true)
-	samples.c2:setLooping(true)
-	samples.d:setLooping(true)
-	samples.e1:setLooping(true)
-	samples.e2:setLooping(true)
-	samples.z1:setLooping(true)
-	samples.z2:setLooping(true)
+	cue = love.audio.newSource("placeholder/z2.wav")
+	cue:setLooping(true)
 end
 
 -- Beacons: 
@@ -58,13 +49,19 @@ local S_CHANCE = 	6 --	 	C2 (Z1)	1		Tagebuch Gelegenheit gefunden
 local S_TELEFON = 	7 --	 	D  		2		Gespräch belauscht
 local S_GEHEIMNIS =	8 --		E0		2		beim Entfernen: Tagebuch Geheimnis
 local S_BRIEF = 	9 --		E1 		6		Max' Brief
+local S_ENDE =		10
 
 function updateVolumes(id, val)
-	if (val > 0) then
+	--if (val > 0) then
 	    if 	   id == B_LOBBY then 
-
+			if state == S_CHANCE then
+				local finished = updateVolume(samples.c2, val)
+				if finished then state = S_TELEFON end
+			elseif state > S_CHANCE then
+				updateVolume(samples.z1, val)
+			end
 	    ------------------------------------------
-	    elseif id == B_OBEN then 
+	    elseif id == B_OBEN  then 
 	    	if state == S_KRITIK then
 				updateVolume(samples.a1, val)
 				state = S_IMHOF
@@ -76,7 +73,7 @@ function updateVolumes(id, val)
 				state = S_BRIEF
 			end
 	    ------------------------------------------
-	    elseif id == B_HOF then 
+	    elseif id == B_HOF   then 
 	    	if state == S_IMHOF then
 				updateVolume(samples.a2, val)
 				state = S_WARUM
@@ -85,28 +82,30 @@ function updateVolumes(id, val)
 				state = S_LOST
 			end
 	    ------------------------------------------
-	    elseif id == B_TUER then 
+	    elseif id == B_TUER  then 
 	    	if state == S_LOST then
 	    		updateVolume(samples.b, val)
 				state = S_GUSTAV
 	    	end
 	    ------------------------------------------
-	    elseif id == B_CAFE then 
+	    elseif id == B_CAFE  then 
 			if state == S_GUSTAV then
 	    		updateVolume(samples.c1, val)
 				state = S_CHANCE
 	    	end
 	    ------------------------------------------
 	    elseif id == B_LINKS then 
-			if state == S_CHANCE then
-	    		updateVolume(samples.c2, val)
-				state = S_TELEFON
+			if state == S_BRIEF then
+	    		updateVolume(samples.e1, val)
+				state = S_ENDE
 	    	end
 	    ------------------------------------------
-	    elseif id == B_WC then 
-
+	    elseif id == B_WC    then 
+			if state > 0 then
+	    		updateVolume(samples.z2, val)
+	    	end
 	    end
-	end
+	--end
 end
 
 -- für die coolen kids mit Coroutinen
@@ -116,30 +115,58 @@ function observe(sample)
 end
 
 function updateVolume(sample, val)
-	if sample:isPlaying() then
-		sample:setVolume(val)
-	else 
-		sample:play()
-		observe(sample)
+	-- gleiches cue für jede source?
+	-- TODO: variable, die weiß, ob das sample schon begonnen hat
+	if val > 70 then
+		cue:stop();
+		if sample:isPlaying() then
+			sample:setVolume(val)
+		else 
+			sample:play()
+		end
+	else
+		if cue:isPlaying() then
+			cue:setVolume(val)
+		else 
+			cue:play()
+		end
 	end
+	return sample:tell() == sample:getDuration()
 end
 
+local id, val = 1, 50
+
 function love.update(dt)
-	-- limit at 10 fps
-	if dt < 1/10 then
-      love.timer.sleep(1/10 - dt)
+	-- limit at 20 fps
+	if dt < 1/3 then
+      love.timer.sleep(1/3 - dt)
    	end
 
-   	local id, val = read()
+   	--local id, val = read()
 
-	if state == 0 then
-		updateVolume(samples.a0, val)
+   	
+   	-- TODO: Alles auf einmal lesen, dann einzeln updaten
+	if state == S_START then
+		local finished = updateVolume(samples.a0, val)
+		if finished then state = S_KRITIK end
 	end
 
 	updateVolumes(id, val);
 
-	print (id, val)
+	print("State: " .. state)
+	print("Val:   " .. val)
+	print("----------------------------")
+	--print (id, val)
 	-- c:close()
+end
+
+function love.keypressed(key)
+    if key == "up" then
+    	val = val + 5
+    end    
+    if key == "down" then
+    	val = val - 5
+    end
 end
 
 function read()
