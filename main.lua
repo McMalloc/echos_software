@@ -1,12 +1,12 @@
-local socket = require "socket"
-local socket_unix = require "socket.unix"
+--local socket = require "socket"
+--local socket_unix = require "socket.unix"
 
 local samples
 local cue
 local state = 0
 
-c = assert(socket_unix())
-c:connect("/tmp/ble")
+--c = assert(socket_unix())
+--c:connect("/tmp/ble")
 
 function love.load()
 	samples = {
@@ -21,7 +21,7 @@ function love.load()
 		e1 = love.audio.newSource("placeholder/e1.wav"),
 		e2 = love.audio.newSource("placeholder/e2.wav"),
 		z1 = love.audio.newSource("placeholder/z1.wav"),
-		z2 = love.audio.newSource("placeholder/z2.wav"),
+		z2 = love.audio.newSource("placeholder/z2.wav")
 	}
 
 	cue = love.audio.newSource("placeholder/z2.wav")
@@ -134,12 +134,12 @@ function updateVolume(sample, val)
 	return sample:tell() == sample:getDuration()
 end
 
-local id, val = 1, 50
+local id, val = 1,0
 
 function love.update(dt)
 	-- limit at 20 fps
 	if dt < 1/3 then
-      love.timer.sleep(1/3 - dt)
+      --love.timer.sleep(1/3 - dt)
    	end
 
    	--local id, val = read()
@@ -153,19 +153,53 @@ function love.update(dt)
 
 	updateVolumes(id, val);
 
-	print("State: " .. state)
-	print("Val:   " .. val)
-	print("----------------------------")
 	--print (id, val)
 	-- c:close()
 end
 
+function love.draw() 
+	love.graphics.print(state, 10, 10)
+	love.graphics.print(id .. ": " .. val, 10, 30)
+
+	love.graphics.print(samples.a0:getVolume(), 30, 50)
+	love.graphics.print(samples.a1:getVolume(), 30, 65)
+	love.graphics.print(samples.a2:getVolume(), 30, 80)
+	love.graphics.print(samples.a3:getVolume(), 30, 95)
+	love.graphics.print( samples.b:getVolume(), 30, 110)
+	love.graphics.print(samples.c1:getVolume(), 30, 125)
+	love.graphics.print(samples.c2:getVolume(), 30, 140)
+	love.graphics.print( samples.d:getVolume(),  30, 155)
+	love.graphics.print(samples.e1:getVolume(), 30, 170)
+	love.graphics.print(samples.e2:getVolume(), 30, 185)
+	love.graphics.print(samples.z1:getVolume(), 30, 200)
+	love.graphics.print(samples.z2:getVolume(), 30, 215)
+	love.graphics.print(beacons[1], 300, 50)
+	love.graphics.print(beacons[2], 300, 65)
+	love.graphics.print(beacons[3], 300, 80)
+	love.graphics.print(beacons[4], 300, 95)
+end
+
 function love.keypressed(key)
     if key == "up" then
-    	val = val + 5
+    	val = val + 10
     end    
     if key == "down" then
-    	val = val - 5
+    	val = val - 10
+    end    
+    if key == "1" then
+    	id = 1
+    end    
+    if key == "2" then
+    	id = 2
+    end    
+    if key == "3" then
+    	id = 3
+    end     
+    if key == "4" then
+    	id = 4
+    end           
+    if key == "escape" then
+    	love.event.quit()
     end
 end
 
