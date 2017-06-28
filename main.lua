@@ -4,7 +4,7 @@ local socket_unix = require "socket.unix"
 local samples
 local state = 0
 
-c = assert(socket.unix())
+c = assert(socket_unix())
 c:connect("/tmp/ble")
 
 function love.load()
@@ -37,19 +37,74 @@ function love.load()
 	samples.z2:setLooping(true)
 end
 
+-- Beacons: 
+local B_LOBBY = 1 -- Lobby oder rechter Flügel
+local B_OBEN = 	2 -- Oben rechts
+local B_HOF = 	3 -- Hof
+local B_TUER = 	4 -- Eingangstür Hof
+local B_CAFE = 	5 -- Cafeteria
+local B_LINKS = 6 -- Linker Flügel
+local B_WC = 	7 -- WC
+
+-- Minimum State bei Z1 und Z2 
+--					State 		Szene	Beacon 	Beschreibung
+local S_START = 	0 -- 	 	A0 (Z2)	-		Buch hochgenommen
+local S_KRITIK = 	1 --	 	A1 		2		Max kritisiert Kaethe 
+local S_IMHOF = 	2 --	 	A2 		3		Treffen im Hof 
+local S_WARUM = 	3 --	 	A3 		3		beim Entfernen: State 2 abgeschlossen, Tagebuchmonolog 
+local S_LOST = 		4 --	 	B  		4		Tagebuch Max ist verschwunden 
+local S_GUSTAV = 	5 --	 	C1 		5		Unterhaltung mit Gustav
+local S_CHANCE = 	6 --	 	C2 (Z1)	1		Tagebuch Gelegenheit gefunden
+local S_TELEFON = 	7 --	 	D  		2		Gespräch belauscht
+local S_GEHEIMNIS =	8 --		E0		2		beim Entfernen: Tagebuch Geheimnis
+local S_BRIEF = 	9 --		E1 		6		Max' Brief
+
 function updateVolumes(id, val)
 	if (val > 0) then
-		if     id == 0 then 
-			if state == 1 then
+	    if 	   id == B_LOBBY then 
+
+	    ------------------------------------------
+	    elseif id == B_OBEN then 
+	    	if state == S_KRITIK then
 				updateVolume(samples.a1, val)
+				state = S_IMHOF
+			elseif state == S_TELEFON then
+				updateVolume(samples.d, val)
+				state = S_GEHEIMNIS
+			elseif state == S_GEHEIMNIS then
+				updateVolume(samples.e0, val)
+				state = S_BRIEF
 			end
-	    elseif id == 1 then print("bee")
-	    elseif id == 2 then print("bee")
-	    elseif id == 3 then print("bee")
-	    elseif id == 4 then print("bee")
-	    elseif id == 5 then print("bee")
-	    elseif id == 6 then print("bee")
-	    elseif id == 7 then print("bee")
+	    ------------------------------------------
+	    elseif id == B_HOF then 
+	    	if state == S_IMHOF then
+				updateVolume(samples.a2, val)
+				state = S_WARUM
+			elseif state == S_WARUM then
+				updateVolume(samples.a3, val)
+				state = S_LOST
+			end
+	    ------------------------------------------
+	    elseif id == B_TUER then 
+	    	if state == S_LOST then
+	    		updateVolume(samples.b, val)
+				state = S_GUSTAV
+	    	end
+	    ------------------------------------------
+	    elseif id == B_CAFE then 
+			if state == S_GUSTAV then
+	    		updateVolume(samples.c1, val)
+				state = S_CHANCE
+	    	end
+	    ------------------------------------------
+	    elseif id == B_LINKS then 
+			if state == S_CHANCE then
+	    		updateVolume(samples.c2, val)
+				state = S_TELEFON
+	    	end
+	    ------------------------------------------
+	    elseif id == B_WC then 
+
 	    end
 	end
 end
@@ -58,12 +113,11 @@ end
 function observe(sample)
 	local max = sample:getDuration()
 	local current = sample:tell()
-	if 
 end
 
 function updateVolume(sample, val)
 	if sample:isPlaying() then
-		sample.setVolume(val)
+		sample:setVolume(val)
 	else 
 		sample:play()
 		observe(sample)
@@ -76,6 +130,19 @@ function love.update(dt)
       love.timer.sleep(1/10 - dt)
    	end
 
+   	local id, val = read()
+
+	if state == 0 then
+		updateVolume(samples.a0, val)
+	end
+
+	updateVolumes(id, val);
+
+	print (id, val)
+	-- c:close()
+end
+
+function read()
 	local msg, id, val
 	msg = c:receive("*l")
 
@@ -85,8 +152,5 @@ function love.update(dt)
    		if idx == 1 then val = tonumber(i) end
    		idx = idx + 1
 	end
-	updateVolumes(id, val);
-
-	print (id, val)
-	-- c:close()
+	return id, val
 end
