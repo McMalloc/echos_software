@@ -25,9 +25,9 @@ function love.load()
 	}
 
 	cue = love.audio.newSource("placeholder/z2.wav")
-	cue:setLooping(true)
 end
 
+local beacons = {"B_LOBBY","B_OBEN","B_HOF","B_TUER","B_CAFE","B_LINKS","B_WC"}
 -- Beacons: 
 local B_LOBBY = 1 -- Lobby oder rechter Flügel
 local B_OBEN = 	2 -- Oben rechts
@@ -38,6 +38,8 @@ local B_LINKS = 6 -- Linker Flügel
 local B_WC = 	7 -- WC
 
 -- Minimum State bei Z1 und Z2 
+local states = {"S_START","S_KRITIK","S_IMHOF","S_WARUM","S_LOST","S_GUSTAV","S_CHANCE","S_TELEFON","S_GEHEIMNIS","S_BRIEF","S_ENDE"}
+
 --					State 		Szene	Beacon 	Beschreibung
 local S_START = 	0 -- 	 	A0 (Z2)	-		Buch hochgenommen
 local S_KRITIK = 	1 --	 	A1 		2		Max kritisiert Kaethe 
@@ -63,46 +65,46 @@ function updateVolumes(id, val)
 	    ------------------------------------------
 	    elseif id == B_OBEN  then 
 	    	if state == S_KRITIK then
-				updateVolume(samples.a1, val)
-				state = S_IMHOF
+				local finished = updateVolume(samples.a1, val)
+				if finished then state = S_IMHOF end
 			elseif state == S_TELEFON then
-				updateVolume(samples.d, val)
-				state = S_GEHEIMNIS
+				local finished = updateVolume(samples.d, val)
+				if finished then state = S_GEHEIMNIS end
 			elseif state == S_GEHEIMNIS then
-				updateVolume(samples.e0, val)
-				state = S_BRIEF
+				local finished = updateVolume(samples.e0, val)
+				if finished then state = S_BRIEF end
 			end
 	    ------------------------------------------
 	    elseif id == B_HOF   then 
 	    	if state == S_IMHOF then
-				updateVolume(samples.a2, val)
-				state = S_WARUM
+				local finished = updateVolume(samples.a2, val)
+				if finished then state = S_WARUM end
 			elseif state == S_WARUM then
-				updateVolume(samples.a3, val)
-				state = S_LOST
+				local finished = updateVolume(samples.a3, val)
+				if finished then state = S_LOST end
 			end
 	    ------------------------------------------
 	    elseif id == B_TUER  then 
 	    	if state == S_LOST then
-	    		updateVolume(samples.b, val)
-				state = S_GUSTAV
+	    		local finished = updateVolume(samples.b, val)
+				if finished then state = S_GUSTAV end
 	    	end
 	    ------------------------------------------
 	    elseif id == B_CAFE  then 
 			if state == S_GUSTAV then
-	    		updateVolume(samples.c1, val)
-				state = S_CHANCE
+	    		local finished = updateVolume(samples.c1, val)
+				if finished then state = S_CHANCE end
 	    	end
 	    ------------------------------------------
 	    elseif id == B_LINKS then 
 			if state == S_BRIEF then
-	    		updateVolume(samples.e1, val)
-				state = S_ENDE
+	    		local finished = updateVolume(samples.e1, val)
+				if finished then state = S_ENDE end
 	    	end
 	    ------------------------------------------
 	    elseif id == B_WC    then 
 			if state > 0 then
-	    		updateVolume(samples.z2, val)
+	    		local finished = updateVolume(samples.z2, val)
 	    	end
 	    end
 	--end
@@ -117,90 +119,81 @@ end
 function updateVolume(sample, val)
 	-- gleiches cue für jede source?
 	-- TODO: variable, die weiß, ob das sample schon begonnen hat
-	if val > 70 then
+	if sample == nil then return false end
+	if val > 70 or sample:isPlaying() then
 		cue:stop();
 		if sample:isPlaying() then
-			sample:setVolume(val)
+			sample:setVolume(val/100)
 		else 
 			sample:play()
 		end
 	else
 		if cue:isPlaying() then
-			cue:setVolume(val)
+			cue:setVolume(val/100)
 		else 
 			cue:play()
 		end
 	end
-	return sample:tell() == sample:getDuration()
+	return sample:tell() + 0.4 > sample:getDuration()
 end
 
 local id, val = 1,0
 
+local ii = 0
+local fakeinput = {0,0,0,0,0,0,0}
 function love.update(dt)
 	-- limit at 20 fps
-	if dt < 1/3 then
-      --love.timer.sleep(1/3 - dt)
+	if dt < 1/5 then
+      	--love.timer.sleep(1/5 - dt)
    	end
 
    	--local id, val = read()
 
+   	local id, val = ii+1, fakeinput[ii+1]
+
    	
    	-- TODO: Alles auf einmal lesen, dann einzeln updaten
 	if state == S_START then
-		local finished = updateVolume(samples.a0, val)
+		local finished = updateVolume(samples.a0, 100)
 		if finished then state = S_KRITIK end
 	end
 
 	updateVolumes(id, val);
 
+	ii = (ii + 1) % 7
 	--print (id, val)
 	-- c:close()
 end
 
-function love.draw() 
-	love.graphics.print(state, 10, 10)
-	love.graphics.print(id .. ": " .. val, 10, 30)
+function love.draw()
+	local width = 1000 / 7
 
-	love.graphics.print(samples.a0:getVolume(), 30, 50)
-	love.graphics.print(samples.a1:getVolume(), 30, 65)
-	love.graphics.print(samples.a2:getVolume(), 30, 80)
-	love.graphics.print(samples.a3:getVolume(), 30, 95)
-	love.graphics.print( samples.b:getVolume(), 30, 110)
-	love.graphics.print(samples.c1:getVolume(), 30, 125)
-	love.graphics.print(samples.c2:getVolume(), 30, 140)
-	love.graphics.print( samples.d:getVolume(),  30, 155)
-	love.graphics.print(samples.e1:getVolume(), 30, 170)
-	love.graphics.print(samples.e2:getVolume(), 30, 185)
-	love.graphics.print(samples.z1:getVolume(), 30, 200)
-	love.graphics.print(samples.z2:getVolume(), 30, 215)
-	love.graphics.print(beacons[1], 300, 50)
-	love.graphics.print(beacons[2], 300, 65)
-	love.graphics.print(beacons[3], 300, 80)
-	love.graphics.print(beacons[4], 300, 95)
+	for i=1,table.getn(states) do
+
+		if state == i-1 then
+			love.graphics.setColor(230,0,120)
+			love.graphics.rectangle("fill", width*(i-1)+40, 300, width-55, 30)
+		end
+
+		love.graphics.setColor(255,255,255)
+		love.graphics.print(states[i], width*(i-1)+50, 300)
+	end
+
+	for i=1,table.getn(beacons) do
+		love.graphics.print(beacons[i] .. ": " .. fakeinput[i], width*(i-1), 430)
+		love.graphics.rectangle("fill", width*(i-1), 450, width-5, fakeinput[i])
+	end
 end
 
-function love.keypressed(key)
-    if key == "up" then
-    	val = val + 10
-    end    
-    if key == "down" then
-    	val = val - 10
-    end    
-    if key == "1" then
-    	id = 1
-    end    
-    if key == "2" then
-    	id = 2
-    end    
-    if key == "3" then
-    	id = 3
-    end     
-    if key == "4" then
-    	id = 4
-    end           
+function love.keypressed(key)         
     if key == "escape" then
     	love.event.quit()
     end
+end
+
+function love.mousemoved( x, y, dx, dy, istouch )
+	local segment = (math.floor((x/1000) * 7)) + 1
+	fakeinput[segment] = math.floor(((600-y)/600)*100)
 end
 
 function read()
