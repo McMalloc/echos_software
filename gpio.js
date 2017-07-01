@@ -1,7 +1,7 @@
 var GPIO = require('rpi-gpio');
 
 GPIO.on('change', function(channel, value) {
-    switch value {
+    switch (value) {
 		case 7:
 			console.log("7: " + value);
 			reedA = value;

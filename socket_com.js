@@ -73,7 +73,7 @@ var log = function(who, what) {
 process.stdin.resume();
 
 function exitHandler(options, err) {
-  console.log("\nFreeing sokcet address");
+  console.log("\nFreeing socket address");
     server.close();
     if (options.cleanup) console.log('clean');
     if (err) console.log(err.stack);
