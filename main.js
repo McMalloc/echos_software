@@ -1,6 +1,6 @@
 var B = require('bleacon');
 var com = require('./socket_com');
-// var GPIO = require('rpi-gpio')
+var gpioscript = require('./gpio');
 var k = 0.85; // time constant for filter function
     
 beacons = {
@@ -8,12 +8,15 @@ beacons = {
     strength: 0,
     timeout: null
   },
-	"2": {
+  "2": {
     strength: 0,
     timeout: null
   }
 };
-    
+
+reedA = 0;
+reedA = 1;
+ 
 B.startScanning();
     
 B.on('discover', function(b) {

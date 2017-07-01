@@ -10,6 +10,8 @@ var write = function(socket) {
           msg = msg + key + " " + Math.floor(beacons[key].strength) + "\n";
       }
     }
+	msg = msg + "90 " + reedA + "\n"
+			  + "91 " + reedB + "\n";
     socket.write(msg);
   }, 100);
   
