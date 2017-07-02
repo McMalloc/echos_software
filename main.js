@@ -1,25 +1,39 @@
 var B = require('bleacon');
 var com = require('./socket_com');
-var gpioscript = require('./gpio');
+// var gpioscript = require('./gpio');
 var k = 0.85; // time constant for filter function
     
 beacons = {
-  "1": {
-    strength: 0,
-    timeout: null
+  "1": { // Lobby oder rechter Flügel
+    strength: 0, timeout: null
   },
-  "2": {
-    strength: 0,
-    timeout: null
+  "2": { // Oben rechts
+    strength: 0, timeout: null
+  },
+  "3": { // Hof
+    strength: 0, timeout: null
+  },
+  "4": { // Eingangstuer
+    strength: 0, timeout: null
+  },
+  "5": { // Cafeteria
+    strength: 0, timeout: null
+  },
+  "6": { // Linker Flügel
+    strength: 0, timeout: null
+  },
+  "7": { // WC
+    strength: 0, timeout: null
   }
 };
 
 reedA = 0;
-reedA = 1;
+reedB = 1;
  
 B.startScanning();
     
 B.on('discover', function(b) {
+  if (!beacons.hasOwnProperty(b.major)) return;
   var oldVal = beacons[b.major].strength;
 
   // single pole low pass filter, whatever the fuck that means

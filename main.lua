@@ -1,14 +1,15 @@
---local socket = require "socket"
---local socket_unix = require "socket.unix"
+local socket = require "socket"
+local socket_unix = require "socket.unix"
+local inspect = require "inspect"
 
 local samples
 local cue
-local state = 0
+local state = 2
 local debugMode = false
 local mock = false
 
---c = assert(socket_unix())
---c:connect("/tmp/ble")
+c = assert(socket_unix())
+c:connect("/tmp/ble")
 
 function love.load(arg)
 	
@@ -27,7 +28,7 @@ function love.load(arg)
 		e1 = love.audio.newSource("placeholder/e1.wav"),
 		e2 = love.audio.newSource("placeholder/e2.wav"),
 		z1 = love.audio.newSource("placeholder/z1.wav"),
-		z2 = love.audio.newSource("placeholder/z2.wav")
+		--z2 = love.audio.newSource("placeholder/z2.wav")
 	}
 	
 	idle = love.audio.newSource("placeholder/e1.wav")
@@ -35,17 +36,17 @@ function love.load(arg)
 end
 
 
-local beacons = {"B_LOBBY","B_OBEN","B_HOF","B_TUER","B_CAFE","B_LINKS","B_WC"}
+local beacons = {"B_RECHTS","B_OBEN","B_HOF","B_FOYER","B_CAFE","B_LINKS","B_WC"}
 local states = {"S_IDLE","S_READY","S_START","S_KRITIK","S_IMHOF","S_WARUM","S_LOST","S_GUSTAV","S_CHANCE","S_TELEFON","S_GEHEIMNIS","S_BRIEF","S_ENDE"}
 
 -- Beacons: 
-local B_LOBBY = 1 -- Lobby oder rechter Flügel
-local B_OBEN = 	2 -- Oben rechts
-local B_HOF = 	3 -- Hof
-local B_TUER = 	4 -- Eingangstür Hof
-local B_CAFE = 	5 -- Cafeteria
-local B_LINKS = 6 -- Linker Flügel
-local B_WC = 	7 -- WC
+local B_RECHTS = 	1 -- rechter Flügel
+local B_OBEN = 	 	2 -- Oben rechts
+local B_HOF = 	 	3 -- Hof
+local B_FOYER = 	4 -- Eingangstür Hof--Lobby
+local B_CAFE = 		5 -- Cafeteria
+local B_LINKS = 	6 -- Linker Flügel
+local B_WC = 		7 -- WC
 
 -- Minimum State bei Z1 und Z2 
 --					State 		Szene	Beacon 	Beschreibung
@@ -57,15 +58,17 @@ local S_IMHOF = 	4 --	 	A2 		3		Treffen im Hof
 local S_WARUM = 	5 --	 	A3 		3		beim Entfernen: State 2 abgeschlossen, Tagebuchmonolog 
 local S_LOST = 		6 --	 	B  		4		Tagebuch Max ist verschwunden 
 local S_GUSTAV = 	7 --	 	C1 		5		Unterhaltung mit Gustav
-local S_CHANCE = 	8 --	 	C2 (Z1)	1		Tagebuch Gelegenheit gefunden
+local S_CHANCE = 	8 --	 	C2 (Z1)	1		Tagebuch Gelegenheit gefunden, länger sitzenbleiben
 local S_TELEFON = 	9 --	 	D  		2		Gespräch belauscht
 local S_GEHEIMNIS =10 --		E0		2		beim Entfernen: Tagebuch Geheimnis
 local S_BRIEF =    11 --		E1 		6		Max' Brief
 local S_ENDE =	   12 --		-		-		Abspann läuft, warte auf Reset
 
 function updateVolumes(id, val)
-	--if (val > 0) then
-	    if 	   id == B_LOBBY then 
+	--print(states[state])
+	print(id, val)
+	print("-------")
+	    if 	   id == B_RECHTS then 
 			if state == S_CHANCE then
 				local finished = updateVolume(samples.c2, val)
 				if finished then state = S_TELEFON end
@@ -94,7 +97,7 @@ function updateVolumes(id, val)
 				if finished then state = S_LOST end
 			end
 	    ------------------------------------------
-	    elseif id == B_TUER  then 
+	    elseif id == B_FOYER  then 
 	    	if state == S_LOST then
 	    		local finished = updateVolume(samples.b, val)
 				if finished then state = S_GUSTAV end
@@ -117,7 +120,6 @@ function updateVolumes(id, val)
 	    		local finished = updateVolume(samples.z2, val)
 	    	end
 	    end
-	--end
 end
 
 function updateVolume(sample, val)
@@ -146,42 +148,49 @@ local fakeinput = {0,0,0,0,0,0,0}
 function love.update(dt)
 	-- limit at 10 fps
 	if dt < 1/10 and not debugMode then
-      	love.timer.sleep(1/10 - dt)
+      	love.timer.sleep(1/10- dt)
    	end
 
+   	local msgs = {}
+
 	if mock then
-		local id, val = ii+1, fakeinput[ii+1]
+		-- id, val = ii+1, fakeinput[ii+1]
 	else
-		local id, val = read()
+		msgs = read()
 	end
-   	
-	-- node sendet Signal vom Reed-Schalter "Aufheben"
-	-- 1: liegend, 0: aufgehoben
-	if id == 90 then
-		if val == 1 then
-			state = S_IDLE
-		elseif val == 0 and state < S_START then
-			state = S_READY
+
+	for k, v in pairs(msgs) do
+		local id, val = v[1], v[2]
+		-- node sendet Signal vom Reed-Schalter "Aufheben"
+		-- 1: liegend, 0: aufgehoben
+		if id == 90 then
+			if val == 1 then
+				state = S_IDLE
+			elseif val == 0 and state < S_START then
+				state = S_READY
+			end
 		end
-	end
-	-- node sendet Signal vom Reed-Schalter "Aufschlagen"
-	-- 1: geschlossen, 0: geöffnet
-	if id == 91 and val == 0 then	
-		if state == S_READY then
-			state = S_START
+		-- node sendet Signal vom Reed-Schalter "Aufschlagen"
+		-- 1: geschlossen, 0: geöffnet
+		
+		if id == 91 and val == 0 then	
+			if state == S_READY then
+				state = S_START
+			end
 		end
+
+	   	-- TODO: Alles auf einmal lesen, dann einzeln updaten
+		if state == S_START then
+			local finished = updateVolume(samples.a0, 100)
+			if finished then state = S_KRITIK end
+		end
+
+		updateVolumes(id, val)
+
+		if mock then
+			ii = (ii + 1) % 7
 	end
 
-   	-- TODO: Alles auf einmal lesen, dann einzeln updaten
-	if state == S_START then
-		local finished = updateVolume(samples.a0, 100)
-		if finished then state = S_KRITIK end
-	end
-
-	updateVolumes(id, val);
-
-	if mock then
-		ii = (ii + 1) % 7
 	end
 end
 
@@ -225,12 +234,27 @@ end
 function read()
 	local msg, id, val
 	msg = c:receive("*l")
+	
+	if msg == nil then return {} end
 
-	local idx = 0;
-	for i in string.gmatch(msg, "%S+") do
-   		if idx == 0 then id = tonumber(i) end
-   		if idx == 1 then val = tonumber(i) end
-   		idx = idx + 1
+	local msgs = {}
+
+	for m in string.gmatch(msg, "([^,]+)") do
+		-- id[space]value(,)
+		local first = true
+		local id, val
+		for f in string.gmatch(m, "%S+") do
+	   		if first then 
+	   			id = tonumber(f)
+	   			first = false 
+	   		else
+	   			val = tonumber(f) 
+	   			first = true
+	   		end
+	   		--print(id, val)
+		end
+		table.insert(msgs, {id, val})
 	end
-	return id, val
+
+	return msgs
 end

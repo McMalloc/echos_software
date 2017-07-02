@@ -2,18 +2,21 @@ var net = require('net');
 var unixsocket = '/tmp/ble';
 
 var write = function(socket) {
-  console.log("init function");
   var interval = setInterval(function() {
     var msg = "";
     for (var key in beacons) {
       if (beacons.hasOwnProperty(key)) {
-          msg = msg + key + " " + Math.floor(beacons[key].strength) + "\n";
+          var value = beacons[key].strength;
+          if (value > 0) {
+            msg = msg + key + " " + Math.floor(value) + ",";
+          }
       }
     }
-	msg = msg + "90 " + reedA + "\n"
-			  + "91 " + reedB + "\n";
+	msg = msg + "90 " + reedA + ","
+			      + "91 " + reedB + "\n";
+  console.log(msg);
     socket.write(msg);
-  }, 100);
+  }, 200);
   
   socket.on('end', function() {
     // exec'd when socket other end of connection sends FIN packet
