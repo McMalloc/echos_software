@@ -1,6 +1,5 @@
 local socket = require "socket"
 local socket_unix = require "socket.unix"
-local inspect = require "inspect"
 
 local samples
 local cue
@@ -65,9 +64,9 @@ local S_BRIEF =    11 --		E1 		6		Max' Brief
 local S_ENDE =	   12 --		-		-		Abspann läuft, warte auf Reset
 
 function updateVolumes(id, val)
-	--print(states[state])
-	print(id, val)
-	print("-------")
+	io.write(states[state] .. "\n")
+	io.write(id .. ": " .. val .. "\n")
+	io.write("-------\n")
 	    if 	   id == B_RECHTS then 
 			if state == S_CHANCE then
 				local finished = updateVolume(samples.c2, val)
