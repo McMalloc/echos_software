@@ -16,22 +16,25 @@ function love.load(arg)
 	mock = arg[3] == "mock"
 
 	samples = {
-		a0 = love.audio.newSource("placeholder/a0.wav", "static"),
-		a1 = love.audio.newSource("placeholder/a1.wav"),
-		a2 = love.audio.newSource("placeholder/a2.wav"),
-		a3 = love.audio.newSource("placeholder/a3.wav"),
-		b  = love.audio.newSource("placeholder/b.wav"),
-		c1 = love.audio.newSource("placeholder/c1.wav"),
-		c2 = love.audio.newSource("placeholder/c2.wav"),
-		d  = love.audio.newSource("placeholder/d.wav"),
-		e1 = love.audio.newSource("placeholder/e1.wav"),
-		e2 = love.audio.newSource("placeholder/e2.wav"),
-		z1 = love.audio.newSource("placeholder/z1.wav"),
-		--z2 = love.audio.newSource("placeholder/z2.wav")
+		a0 = love.audio.newSource("sounds/a0.wav", "static"),
+		a1 = love.audio.newSource("sounds/a1.wav", "static"),
+		a2 = love.audio.newSource("sounds/a2.wav", "static"),
+		a3 = love.audio.newSource("sounds/a3.wav", "static"),
+		b  = love.audio.newSource("sounds/b.wav",  "static"),
+		c1 = love.audio.newSource("sounds/c1.wav", "static"),
+		c2 = love.audio.newSource("sounds/c2.wav", "static"),
+		d  = love.audio.newSource("sounds/d.wav",  "static"),
+		e1 = love.audio.newSource("sounds/e1.wav", "static"),
+		e2 = love.audio.newSource("sounds/e2.wav", "static"),
+		z1 = love.audio.newSource("sounds/z1.wav", "static"),
+		z2 = love.audio.newSource("sounds/z2.wav", "static")
 	}
 	
 	idle = love.audio.newSource("placeholder/e1.wav")
-	cue = love.audio.newSource("placeholder/e2.wav")
+	cue = love.audio.newSource("sounds/cue.wav")
+
+	idle.setLooping(true)
+	cue.setLooping(true)
 end
 
 
@@ -176,6 +179,12 @@ function love.update(dt)
 			if state == S_READY then
 				state = S_START
 			end
+		end
+
+		if state == S_IDLE then
+			updateVolume(idle, 100)
+		elseif idle.isPlaying() then
+			idle.stop()
 		end
 
 		if state == S_START then
