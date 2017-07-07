@@ -1,6 +1,6 @@
 var B = require('bleacon');
 var com = require('./socket_com');
-// var gpioscript = require('./gpio');
+var gpioscript = require('./gpio');
 var k = 0.85; // time constant for filter function
     
 beacons = {

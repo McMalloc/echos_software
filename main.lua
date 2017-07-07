@@ -16,7 +16,7 @@ function love.load(arg)
 	mock = arg[3] == "mock"
 
 	samples = {
-		a0 = love.audio.newSource("placeholder/a0.wav"),
+		a0 = love.audio.newSource("placeholder/a0.wav", "static"),
 		a1 = love.audio.newSource("placeholder/a1.wav"),
 		a2 = love.audio.newSource("placeholder/a2.wav"),
 		a3 = love.audio.newSource("placeholder/a3.wav"),
@@ -31,7 +31,7 @@ function love.load(arg)
 	}
 	
 	idle = love.audio.newSource("placeholder/e1.wav")
-	cue = love.audio.newSource("placeholder/z2.wav")
+	cue = love.audio.newSource("placeholder/e2.wav")
 end
 
 
@@ -178,13 +178,14 @@ function love.update(dt)
 			end
 		end
 
-	   	-- TODO: Alles auf einmal lesen, dann einzeln updaten
 		if state == S_START then
 			local finished = updateVolume(samples.a0, 100)
 			if finished then state = S_KRITIK end
 		end
 
-		updateVolumes(id, val)
+		if not (id == 91 or id == 90) then
+			updateVolumes(id, val)
+		end
 
 		if mock then
 			ii = (ii + 1) % 7

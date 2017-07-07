@@ -16,7 +16,8 @@ var write = function(socket) {
     }
 	msg = msg + "90 " + reedA + ","
 			      + "91 " + reedB + "\n";
-    socket.write(msg);
+    	console.log(msg);
+	socket.write(msg);
   }, 200);
   
   socket.on('end', function() {
@@ -49,8 +50,8 @@ server.on('listening', function() {
 
   love = spawn('love', ['.']);
   love.stdout.on('data', function(chunk) {
-        process.stdout.write("LOVE:   " + chunk.toString());
-    });
+      process.stdout.write("LOVE:   " + chunk.toString());
+  });
   love.on('exit', function (code) {
     console.log('love exited with code ' + code.toString());
   });
