@@ -3,7 +3,7 @@ local socket_unix = require "socket.unix"
 
 local samples
 local cue
-local state = 2
+local state = 0
 local debugMode = false
 local mock = false
 
@@ -24,17 +24,17 @@ function love.load(arg)
 		c1 = love.audio.newSource("sounds/c1.wav", "static"),
 		c2 = love.audio.newSource("sounds/c2.wav", "static"),
 		d  = love.audio.newSource("sounds/d.wav",  "static"),
+		e0 = love.audio.newSource("sounds/e0.wav", "static"),
 		e1 = love.audio.newSource("sounds/e1.wav", "static"),
-		e2 = love.audio.newSource("sounds/e2.wav", "static"),
 		z1 = love.audio.newSource("sounds/z1.wav", "static"),
 		z2 = love.audio.newSource("sounds/z2.wav", "static")
 	}
 	
-	idle = love.audio.newSource("placeholder/e1.wav")
+	idle = love.audio.newSource("sounds/idle.wav")
 	cue = love.audio.newSource("sounds/cue.wav")
 
-	idle.setLooping(true)
-	cue.setLooping(true)
+	idle:setLooping(true)
+	cue:setLooping(true)
 end
 
 
@@ -183,8 +183,8 @@ function love.update(dt)
 
 		if state == S_IDLE then
 			updateVolume(idle, 100)
-		elseif idle.isPlaying() then
-			idle.stop()
+		elseif idle:isPlaying() then
+			idle:stop()
 		end
 
 		if state == S_START then

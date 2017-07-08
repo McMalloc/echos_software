@@ -1,6 +1,9 @@
 var B = require('bleacon');
 var com = require('./socket_com');
-var gpioscript = require('./gpio');
+var gpioscript;
+if (process.argv[3] && (process.argv[3] == 'gpio')) {
+  gpioscript = require('./gpio');
+}
 var k = 0.85; // time constant for filter function
     
 beacons = {
@@ -27,7 +30,7 @@ beacons = {
   }
 };
 
-reedA = 0;
+reedA = 1;
 reedB = 1;
  
 B.startScanning();

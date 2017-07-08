@@ -16,7 +16,7 @@ var write = function(socket) {
     }
 	msg = msg + "90 " + reedA + ","
 			      + "91 " + reedB + "\n";
-    	console.log(msg);
+    	//console.log(msg);
 	socket.write(msg);
   }, 200);
   
@@ -47,14 +47,15 @@ server.listen(unixsocket); // port or unix socket, cannot listen on both with on
 
 server.on('listening', function() {
   var ad = server.address();
-
-  love = spawn('love', ['.']);
-  love.stdout.on('data', function(chunk) {
+  if (process.argv[2] && (process.argv[2] == 'love')) {
+    love = spawn('love', ['.']);
+    love.stdout.on('data', function(chunk) {
       process.stdout.write("LOVE:   " + chunk.toString());
-  });
-  love.on('exit', function (code) {
-    console.log('love exited with code ' + code.toString());
-  });
+    });
+    love.on('exit', function (code) {
+      console.log('love exited with code ' + code.toString());
+    });
+  }
 
   if (typeof ad === 'string') {
     console.log('[server on listening] %s', ad);
