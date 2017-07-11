@@ -18,13 +18,16 @@ function love.load(arg)
 	samples = {
 		a0 = love.audio.newSource("sounds/a0.wav", "static"),
 		a1 = love.audio.newSource("sounds/a1.wav", "static"),
+		a1_hint = love.audio.newSource("sounds/a1_hint.wav"),
 		a2 = love.audio.newSource("sounds/a2.wav", "static"),
 		a3 = love.audio.newSource("sounds/a3.wav", "static"),
 		b  = love.audio.newSource("sounds/b.wav",  "static"),
+		b_hint  = love.audio.newSource("sounds/b_hint.wav"),
 		c1 = love.audio.newSource("sounds/c1.wav", "static"),
-		c2 = love.audio.newSource("sounds/c2.wav", "static"),
+		c2_hint = love.audio.newSource("sounds/c2.wav"),
 		d  = love.audio.newSource("sounds/d.wav",  "static"),
 		e0 = love.audio.newSource("sounds/e0.wav", "static"),
+		e0_hint = love.audio.newSource("sounds/e0.wav"),
 		e1 = love.audio.newSource("sounds/e1.wav", "static"),
 		z1 = love.audio.newSource("sounds/z1.wav", "static"),
 		z2 = love.audio.newSource("sounds/z2.wav", "static")
@@ -145,21 +148,32 @@ function updateVolume(sample, val)
 	return sample:tell() + 0.4 > sample:getDuration()
 end
 
-local ii = 0
-local fakeinput = {0,0,0,0,0,0,0}
+function playHint()
+	if 	samples.a1_hint:isPlaying() or
+		samples.b_hint:isPlaying() or
+		samples.c2_hint:isPlaying() or
+		samples.b_hint:isPlaying() then
+		return
+	end
+	if state == S_KRITIK then
+		samples.a1_hint:play()
+	elseif state == S_LOST then
+		samples.b_hint:play()
+	elseif state == S_CHANCE then
+		samples.c2_hint:play()
+	elseif state == S_GEHEIMNIS then
+		samples.e0_hint:play()
+	end
+end
+
 function love.update(dt)
 	-- limit at 10 fps
-	if dt < 1/10 and not debugMode then
+	if dt < 1/10 then
       	love.timer.sleep(1/10- dt)
    	end
 
    	local msgs = {}
-
-	if mock then
-		-- id, val = ii+1, fakeinput[ii+1]
-	else
-		msgs = read()
-	end
+	msgs = read()
 
 	for k, v in pairs(msgs) do
 		local id, val = v[1], v[2]
@@ -179,6 +193,7 @@ function love.update(dt)
 			if state == S_READY then
 				state = S_START
 			end
+			playHint()
 		end
 
 		if state == S_IDLE then
@@ -200,43 +215,6 @@ function love.update(dt)
 			ii = (ii + 1) % 7
 	end
 
-	end
-end
-
-
-function love.draw()
-	if debugMode then
-		local widthB = 1000 / table.getn(beacons)
-		local widthS = 1000 / table.getn(states)
-
-		--love.graphics.print(states[state], 100, 30)
-		for i=1,table.getn(states) do
-			if state == i-1 then
-				love.graphics.setColor(230,0,120)
-				love.graphics.rectangle("fill", widthS*(i-1)+40, 300, widthS-55, 30)
-			end
-
-			love.graphics.setColor(255,255,255)
-			love.graphics.print(states[i], widthS*(i-1)+50, 300)
-		end
-
-		for i=1,table.getn(beacons) do
-			love.graphics.print(beacons[i] .. ": " .. fakeinput[i], widthB*(i-1), 430)
-			love.graphics.rectangle("fill", widthB*(i-1), 450, widthB-5, fakeinput[i])
-		end
-		end
-	end
-	
-function love.keypressed(key)         
-	if key == "escape" then
-		love.event.quit()
-	end
-end
-
-function love.mousemoved( x, y, dx, dy, istouch )
-	if debugMode then
-		local segment = (math.floor((x/1000) * 7)) + 1
-		fakeinput[segment] = math.floor(((600-y)/600)*100)
 	end
 end
 
