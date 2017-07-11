@@ -38,7 +38,7 @@ B.startScanning();
 B.on('discover', function(b) {
   if (!beacons.hasOwnProperty(b.major)) return;
   var oldVal = beacons[b.major].strength;
-
+  console.log(b);
   // single pole low pass filter, whatever the fuck that means
   // xf = k * xf + (1.0 - k) * x;
 

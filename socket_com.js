@@ -90,7 +90,9 @@ process.stdin.resume();
 function exitHandler(options, err) {
   console.log("\nFreeing socket address");
     server.close();
-    love.kill('SIGHUP');
+    if (process.argv[2] && (process.argv[2] == 'love')) {
+      love.kill('SIGHUP');
+    }
     if (options.cleanup) console.log('clean');
     if (err) console.log(err.stack);
     if (options.exit) process.exit();
