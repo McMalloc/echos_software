@@ -24,6 +24,7 @@ function love.load(arg)
 		b  = love.audio.newSource("sounds/b.wav"),
 		b_hint  = love.audio.newSource("sounds/b_hint.wav"),
 		c1 = love.audio.newSource("sounds/c1.wav"),
+		c2 = love.audio.newSource("sounds/c2.wav"),
 		c2_hint = love.audio.newSource("sounds/c2.wav"),
 		d0  = love.audio.newSource("sounds/d0.wav"),
 		dc = love.audio.newSource("sounds/dc.wav"),
@@ -74,13 +75,16 @@ local S_GEHEIMNIS =11 --		E0		2		beim Entfernen: Tagebuch Geheimnis
 local S_BRIEF =    12 --		E1 		6		Max' Brief
 local S_ENDE =	   13 --		-		-		Abspann läuft, warte auf Reset
 
+-- state override
+-- state = S_TELEFON
+
 function updateVolumes(id, val)
 	    if 	   id == B_RECHTS then 
 			if state == S_CHANCE then
 				local finished = updateVolume(samples.c2, val)
 				if finished then state = S_TELEFON end
 			elseif state > S_CHANCE then
-				updateVolume(samples.z1, val)
+				updateVolume(samples.z2, val)
 			end
 	    ------------------------------------------
 	    elseif id == B_OBEN  then 
@@ -130,7 +134,7 @@ function updateVolumes(id, val)
 	    ------------------------------------------
 	    elseif id == B_WC    then 
 			if state > S_START then
-	    		local finished = updateVolume(samples.z2, val)
+	    		local finished = updateVolume(samples.z1, val)
 	    	end
 	    end
 end
@@ -230,11 +234,6 @@ function love.update(dt)
 		if not (id == 91 or id == 90) then
 			updateVolumes(id, val)
 		end
-
-		if mock then
-			ii = (ii + 1) % 7
-	end
-
 	end
 end
 

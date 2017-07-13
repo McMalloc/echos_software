@@ -16,7 +16,7 @@ var write = function(socket) {
     }
 	msg = msg + "90 " + reedA + ","
 			      + "91 " + reedB + "\n";
-    	//console.log(msg);
+    	console.log(msg);
 	socket.write(msg);
   }, 200);
   
@@ -49,9 +49,9 @@ server.on('listening', function() {
   var ad = server.address();
   if (process.argv[2] && (process.argv[2] == 'love')) {
     love = spawn('love', ['.']);
-    love.stdout.on('data', function(chunk) {
-      process.stdout.write("LOVE:   " + chunk.toString());
-    });
+    //  love.stdout.on('data', function(chunk) {
+    //    process.stdout.write("LOVE:   " + chunk.toString());
+    //  });
     love.on('exit', function (code) {
       console.log('love exited with code ' + code.toString());
     });

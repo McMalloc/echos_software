@@ -27,10 +27,14 @@ beacons = {
   },
   "7": { // WC
     strength: 0, timeout: null
+  },
+  "8": { // STORE
+    strength: 0, timeout: null
   }
 };
 
-reedA = 1;
+// beide sind aktiv, d.h. das Buch liegt zugeklappt auf der Stele
+reedA = 0; // 1!!
 reedB = 1;
  
 B.startScanning();
@@ -38,7 +42,8 @@ B.startScanning();
 B.on('discover', function(b) {
   if (!beacons.hasOwnProperty(b.major)) return;
   var oldVal = beacons[b.major].strength;
-  console.log(b);
+  // console.log(b.major+": "+beacons[b.major].strength);
+  
   // single pole low pass filter, whatever the fuck that means
   // xf = k * xf + (1.0 - k) * x;
 
