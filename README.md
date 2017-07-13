@@ -1,5 +1,5 @@
 # echos_software
-"Firmware" scripts for running the mobile Pi-based devices used in our Echos exhibit.
+Scripts for running the mobile Pi-based devices used in our Echos exhibit.
 
 [https://github.com/sandeepmistry/node-bleacon](bleacon) and dependencies needs to be available in `node_modules`, 
 and [https://love2d.org/](love) needs to be in the path. Also node, lua comes with love.

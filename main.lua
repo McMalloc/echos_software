@@ -1,20 +1,16 @@
 local socket = require "socket"
 local socket_unix = require "socket.unix"
+log = require "log"
 
 local samples
 local cue
 local state = 0
-local debugMode = false
-local mock = false
 
 c = assert(socket_unix())
 c:connect("/tmp/ble")
+log.outfile = "logs/logfile_" .. os.date("%y.%m.%d_%H.%M.%S") .. ".txt"
 
 function love.load(arg)
-	
-	debugMode = arg[2] == "debug"
-	mock = arg[3] == "mock"
-
 	samples = {
 		a0 = love.audio.newSource("sounds/a0.wav"),
 		a1 = love.audio.newSource("sounds/a1.wav"),
@@ -28,7 +24,7 @@ function love.load(arg)
 		c2_hint = love.audio.newSource("sounds/c2.wav"),
 		d0  = love.audio.newSource("sounds/d0.wav"),
 		dc = love.audio.newSource("sounds/dc.wav"),
-		d1  = love.audio.newSource("sounds/d1.wav"), -- TODO!
+		d1  = love.audio.newSource("sounds/d1.wav"),
 		e0 = love.audio.newSource("sounds/e0.wav"),
 		e0_hint = love.audio.newSource("sounds/e0.wav"),
 		e1 = love.audio.newSource("sounds/e1.wav"),
@@ -38,6 +34,7 @@ function love.load(arg)
 	
 	idle = love.audio.newSource("sounds/idle.wav")
 	cue = love.audio.newSource("sounds/cue.wav")
+	outro = love.audio.newSource("sounds/outro.wav")
 
 	idle:setLooping(true)
 	samples.dc:setLooping(true)
@@ -62,7 +59,7 @@ local B_STORE =		8 -- Concept Store
 --					State 		Szene	Beacon 	Beschreibung
 local S_IDLE =	    0 --		-		-		Buch liegt auf der Stele
 local S_READY =	   	1 --		-		-		Buch ist hochgenommen
-local S_START = 	2 -- 	 	A0 (Z2)	-		Buch hochgenommen
+local S_START = 	2 -- 	 	A0 (Z2)	-		Buch aufgeschlagen
 local S_KRITIK = 	3 --	 	A1 		2		Max kritisiert Kaethe 
 local S_IMHOF = 	4 --	 	A2 		3		Treffen im Hof 
 local S_WARUM = 	5 --	 	A3 		3		beim Entfernen: State 2 abgeschlossen, Tagebuchmonolog 
@@ -74,6 +71,9 @@ local S_TELEFONB = 10 --	 	D  		8		Gespräch belauscht, am Telefon
 local S_GEHEIMNIS =11 --		E0		2		beim Entfernen: Tagebuch Geheimnis
 local S_BRIEF =    12 --		E1 		6		Max' Brief
 local S_ENDE =	   13 --		-		-		Abspann läuft, warte auf Reset
+local S_Z1 = false    -- 		Z1		1		Zusatzdialog 1 beendet
+local S_Z2 = false	  -- 		Z2		7		Zusatzdialog 2 beendet
+local S_end = false
 
 -- state override
 -- state = S_TELEFON
@@ -83,8 +83,8 @@ function updateVolumes(id, val)
 			if state == S_CHANCE then
 				local finished = updateVolume(samples.c2, val)
 				if finished then state = S_TELEFON end
-			elseif state > S_CHANCE then
-				updateVolume(samples.z2, val)
+			elseif state > S_CHANCE and not S_Z2 then
+				S_Z2 = updateVolume(samples.z2, val)
 			end
 	    ------------------------------------------
 	    elseif id == B_OBEN  then 
@@ -133,14 +133,13 @@ function updateVolumes(id, val)
 	    	end
 	    ------------------------------------------
 	    elseif id == B_WC    then 
-			if state > S_START then
-	    		local finished = updateVolume(samples.z1, val)
+			if state > S_START and not S_Z1 then
+	    		S_Z1 = updateVolume(samples.z1, val)
 	    	end
 	    end
 end
 
 function updateVolume(sample, val)
-	-- gleiches cue für jede source?
 	-- TODO. dry/wet
 	if sample == nil then return false end
 	if val > 70 or sample:isPlaying() then
@@ -190,10 +189,11 @@ function playHint()
 	end
 end
 
+local prev_state = 0
 function love.update(dt)
-	-- limit at 10 fps
-	if dt < 1/10 then
-      	love.timer.sleep(1/10- dt)
+	-- limit at 6 fps
+	if dt < 1/6 then
+      	love.timer.sleep(1/6- dt)
    	end
 
    	local msgs = {}
@@ -206,34 +206,46 @@ function love.update(dt)
 		if id == 90 then
 			if val == 1 then
 				state = S_IDLE
+				log.trace("GAME END")
 			elseif val == 0 and state < S_START then
 				state = S_READY
+				log.trace("GAME START")
 			end
 		end
+		
 		-- node sendet Signal vom Reed-Schalter "Aufschlagen"
 		-- 1: geschlossen, 0: geöffnet
-		
 		if id == 91 and val == 0 then	
 			if state == S_READY then
 				state = S_START
 			end
 			playHint()
-		end
-
-		if state == S_IDLE then
-			updateVolume(idle, 100)
-		elseif idle:isPlaying() then
-			idle:stop()
-		end
-
-		if state == S_START then
-			local finished = updateVolume(samples.a0, 100)
-			if finished then state = S_KRITIK end
+			log.trace("* played hint")
 		end
 
 		if not (id == 91 or id == 90) then
 			updateVolumes(id, val)
 		end
+	end
+	
+	if state == S_IDLE then
+		updateVolume(idle, 100)
+	elseif idle:isPlaying() then
+		idle:stop()
+	end
+	
+	if state == S_START then
+		local finished = updateVolume(samples.a0, 100)
+		if finished then state = S_KRITIK end
+	end
+	
+	if state == S_ENDE and not S_end then
+		S_end = updateVolume(outro, 100)
+	end
+	
+	if prevstate != state then
+		prevstate = state
+		log.trace("Switched to #" .. state .. " " states[state+1])
 	end
 end
 
@@ -242,7 +254,6 @@ function read()
 	msg = c:receive("*l")
 	
 	if msg == nil then return {} end
-
 	local msgs = {}
 
 	for m in string.gmatch(msg, "([^,]+)") do
