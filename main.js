@@ -4,7 +4,7 @@ var gpioscript;
 if (process.argv[3] && (process.argv[3] == 'gpio')) {
   gpioscript = require('./gpio');
 }
-var k = 0.85; // time constant for filter function
+var k = 0.9; // time constant for filter function
     
 beacons = {
   "1": { // Lobby oder rechter Flügel
@@ -38,17 +38,25 @@ reedA = 0; // 1!!
 reedB = 1;
  
 B.startScanning();
+
+setInterval(function() {
+	console.log("\n---------\n");
+ 	for (var i = 1; i<9; i++) {
+        	console.log(i+": " + beacons[i+""].strength);
+ 	}
+}, 100);
     
 B.on('discover', function(b) {
   if (!beacons.hasOwnProperty(b.major)) return;
   var oldVal = beacons[b.major].strength;
   // console.log(b.major+": "+beacons[b.major].strength);
   
+
   // single pole low pass filter, whatever the fuck that means
   // xf = k * xf + (1.0 - k) * x;
 
-  var meassuredVal = (1/(b.accuracy+1))*100;
-	beacons[b.major].strength = k * oldVal + (1 - k) * meassuredVal;
+  var meassuredVal = (10-b.accuracy)*10;
+  beacons[b.major].strength = k * oldVal + (1 - k) * meassuredVal;
 
   if (beacons[b.major].timeout != null) clearTimeout(beacons[b.major].timeout);
 
