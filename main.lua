@@ -8,12 +8,8 @@ local state = 0
 
 c = assert(socket_unix())
 c:connect("/tmp/ble")
-<<<<<<< HEAD
 log.outfile = "log.txt"
 log.trace("STARTED")
-=======
-log.outfile = "logs/logfile_" .. os.date("%y.%m.%d_%H.%M.%S") .. ".txt"
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 
 function love.load(arg)
 	samples = {
@@ -40,11 +36,7 @@ function love.load(arg)
 	idle = love.audio.newSource("sounds/idle.wav", "static")
 	cue = love.audio.newSource("sounds/cue.wav")
 	outro = love.audio.newSource("sounds/outro.wav")
-<<<<<<< HEAD
-	
-=======
 
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 	idle:setLooping(true)
 	samples.dc:setLooping(true)
 	cue:setLooping(true)
@@ -78,11 +70,7 @@ local thresholds = {
 --					State 		Szene	Beacon 	Beschreibung
 local S_IDLE =		0 --		-		-		Buch liegt auf der Stele
 local S_READY =	   	1 --		-		-		Buch ist hochgenommen
-<<<<<<< HEAD
 local S_START = 	2 -- 	 	A0 (Z2)		-		Buch aufgeschlagen
-=======
-local S_START = 	2 -- 	 	A0 (Z2)	-		Buch aufgeschlagen
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 local S_KRITIK = 	3 --	 	A1 		2		Max kritisiert Kaethe 
 local S_IMHOF = 	4 --	 	A2 		3		Treffen im Hof 
 local S_WARUM = 	5 --	 	A3 		3		beim Entfernen: State 2 abgeschlossen, Tagebuchmonolog 
@@ -90,21 +78,12 @@ local S_LOST = 		6 --	 	B  		4		Tagebuch Max ist verschwunden
 local S_GUSTAV = 	7 --	 	C1 		5		Unterhaltung mit Gustav
 local S_CHANCE = 	8 --	 	C2 (Z1)		1		Tagebuch Gelegenheit gefunden, länger sitzenbleiben
 local S_TELEFON = 	9 --	 	D  		2		Gespräch belauscht
-<<<<<<< HEAD
-local S_TELEFONB =	10 --	 	D  		8		Gespräch belauscht, am Telefon
-local S_GEHEIMNIS =	11 --		E0		2		beim Entfernen: Tagebuch Geheimnis
-local S_BRIEF =		12 --		E1 		6		Max' Brief
-local S_ENDE =		13 --		-		-		Abspann läuft, warte auf Reset
-local S_Z1 = false    	   -- 		Z1		1		Zusatzdialog 1 beendet
-local S_Z2 = false	   -- 		Z2		7		Zusatzdialog 2 beendet
-=======
 local S_TELEFONB = 10 --	 	D  		8		Gespräch belauscht, am Telefon
 local S_GEHEIMNIS =11 --		E0		2		beim Entfernen: Tagebuch Geheimnis
 local S_BRIEF =    12 --		E1 		6		Max' Brief
 local S_ENDE =	   13 --		-		-		Abspann läuft, warte auf Reset
 local S_Z1 = false    -- 		Z1		1		Zusatzdialog 1 beendet
 local S_Z2 = false	  -- 		Z2		7		Zusatzdialog 2 beendet
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 local S_end = false
 
 -- state override
@@ -117,11 +96,7 @@ function updateVolumes(id, val)
 				local finished = updateVolume(samples.c2, val, id, true)
 				if finished then state = S_TELEFON end
 			elseif state > S_CHANCE and not S_Z2 then
-<<<<<<< HEAD
 				S_Z2 = updateVolume(samples.z2, val, id, false)
-=======
-				S_Z2 = updateVolume(samples.z2, val)
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 			end
 	    ------------------------------------------
 	    elseif id == B_OBEN  then 
@@ -171,16 +146,11 @@ function updateVolumes(id, val)
 	    ------------------------------------------
 	    elseif id == B_WC    then 
 			if state > S_START and not S_Z1 then
-<<<<<<< HEAD
 	    		S_Z1 = updateVolume(samples.z1, val, id, false)
-=======
-	    		S_Z1 = updateVolume(samples.z1, val)
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 	    	end
 	    end
 end
 
-<<<<<<< HEAD
 function volumeMap(value, cutoff)
 	-- Processings Implementierung
 	-- static public final float map(float value, float istart, float istop, float ostart, float ostop) {
@@ -192,9 +162,6 @@ function volumeMap(value, cutoff)
 end
 
 function updateVolume(sample, val, beaconId, playCue)
-=======
-function updateVolume(sample, val)
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 	-- TODO. dry/wet
 	if sample == nil then return false end
 	if val > thresholds[beaconId] or sample:isPlaying() then
@@ -277,10 +244,6 @@ function love.update(dt)
 				state = S_START
 			end
 			playHint()
-<<<<<<< HEAD
-=======
-			log.trace("* played hint")
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 		end
 
 		if not (id == 91 or id == 90) then
@@ -303,17 +266,10 @@ function love.update(dt)
 		S_end = updateVolume(outro, 100)
 	end
 	
-<<<<<<< HEAD
+
 	if not (prevstate == state) then
 		prevstate = state
-		print(state)
-		print(states[state])
-		log.trace("Switched to #" .. state .. " " .. states[state+1])
-=======
-	if prevstate != state then
-		prevstate = state
 		log.trace("Switched to #" .. state .. " " states[state+1])
->>>>>>> 16aae289148de6408828d02fc4a5094c855e8fe5
 	end
 end
 
